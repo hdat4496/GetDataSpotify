@@ -158,23 +158,26 @@ function Song(title, artist, peak_position) {
 }
 
 var songs = [];
+var promises = [];
 // Call API:https://api.spotify.com/v1/search?q=track%3ALac%20troi%20artist%3ASon%20Tung%20MTP&type=track
-let token = "BQCMTuu2x4Fw8VLYai0_zj659cbprTqv3J4WYuY1bRkhY2mvb7obVBSFRT41OerHdkGEvZj7_zC7gM4_9wNxkVqi3C8F6QyZQr5dLRcjcJG_tXpIQuF64iK4UruO_Lyc47PRbq3FpeU1tkF49gSp0y48BTmX8otmZW0-Xsu9eBuUJ51mKYC3B5bEcVfprOiYP6usT32ZfGB-";
-let Authorization = "Bearer " + token ;
+let token = "BQDvjNSh-1tkZ9po3di4szyDn4P-74lJ-oXwf0_KzaFBB4DydPk0k7DW73vWAlq4ldnUcCilz2PgwnwjJEM0QKpYEcXKlzx1MG5pIiWSf4AkfSTm129wiUfuJuJcQChl7hi8h9y27mIn3WoBTXjX-IbLvrpushBrnJkvNYF3g9dhqgo3FTPsGZEr989Uw9LG2nVD-ABisgks";
+let Authorization = "Bearer " + token;
 
 // send Get ID
 function GetId(song) {
-    return new Promise(resolve => {
+    var promise1 = new Promise(resolve => {
         var linkRequest = "https://api.spotify.com/v1/search?q=track:" + song.title + " artist:" + song.artist + "&type=track";
         var xhttp = new XMLHttpRequest();
         function reqListener() {
             resolve(JSON.parse(this.responseText));
             if (this.readyState === 4 && this.status === 200) {
                 var parsedData = JSON.parse(this.responseText);
-                if(parsedData.tracks.items.length > 0){
+                if (parsedData.tracks.items.length > 0) {
                     song.id = parsedData.tracks.items[0].id;
+                    console.log("111111111111111");
                     GetFeatures(song);
                     GetAnalysis(song);
+                    // songs.push(song);
                 }
 
             } else {
@@ -186,13 +189,13 @@ function GetId(song) {
         xhttp.setRequestHeader("Authorization", Authorization);
         xhttp.send();
     });
-
+    promises.push(promise1);
 }
 
-// Call API: https://api.spotify.com/v1/audio-features/6fOA679zqMJA4trVm3mE6G
+// Call API: https://api.spotify.com/v1/audio-features/{id}
 // Get Audio Features for a Track
 function GetFeatures(song) {
-    return new Promise(resolve => {
+    var promise2 = new Promise(resolve => {
         var linkRequest = "https://api.spotify.com/v1/audio-features/" + song.id;
         var xhttp = new XMLHttpRequest();
         function reqListener() {
@@ -208,7 +211,6 @@ function GetFeatures(song) {
                 song.danceability = parsedData.danceability;
                 song.energy = parsedData.energy;
 
-                // console.log(song);
             } else {
 
             }
@@ -218,12 +220,13 @@ function GetFeatures(song) {
         xhttp.setRequestHeader("Authorization", Authorization);
         xhttp.send();
     });
+    promises.push(promise2);
 }
 
-// Call API: https://api.spotify.com/v1/audio-analysis/2RPNCUaDL2ixoY9wGpoJoQ
+// Call API: https://api.spotify.com/v1/audio-analysis/{id}
 // Get Audio Analysis for a Track
 function GetAnalysis(song) {
-    return new Promise(resolve => {
+    var promise3 =  new Promise(resolve => {
         var linkRequest = "https://api.spotify.com/v1/audio-analysis/" + song.id;
         var xhttp = new XMLHttpRequest();
         function reqListener() {
@@ -246,11 +249,11 @@ function GetAnalysis(song) {
                 var timebre12_arr = [];
 
 
-                parsedData.beats.forEach(function(beat) {
+                parsedData.beats.forEach(function (beat) {
                     duration_arr.push(beat.duration);
                 });
 
-                parsedData.segments.forEach(function(segment) {
+                parsedData.segments.forEach(function (segment) {
                     timebre1_arr.push(segment.timbre[0]);
                     timebre2_arr.push(segment.timbre[1]);
                     timebre3_arr.push(segment.timbre[2]);
@@ -267,7 +270,7 @@ function GetAnalysis(song) {
 
                 song.beatdiff_mean = mean(duration_arr);
                 song.beatdiff_variance = variance(duration_arr);
-                song.beatdiff_skewness  = sampleSkewness(duration_arr);
+                song.beatdiff_skewness = sampleSkewness(duration_arr);
                 song.beatdiff_kurtosis = sampleKurtosis(duration_arr);
                 song.beatdiff_standard_deviation = standardDeviation(duration_arr);
                 song.beatdiff_80th_percentile = quantile(duration_arr, 0.8);
@@ -278,7 +281,7 @@ function GetAnalysis(song) {
 
                 song.timebre_1_mean = mean(timebre1_arr);
                 song.timebre_1_variance = variance(timebre1_arr);
-                song.timebre_1_skewness  = sampleSkewness(timebre1_arr);
+                song.timebre_1_skewness = sampleSkewness(timebre1_arr);
                 song.timebre_1_kurtosis = sampleKurtosis(timebre1_arr);
                 song.timebre_1_standard_deviation = standardDeviation(timebre1_arr);
                 song.timebre_1_80th_percentile = quantile(timebre1_arr, 0.8);
@@ -289,7 +292,7 @@ function GetAnalysis(song) {
 
                 song.timebre_2_mean = mean(timebre2_arr);
                 song.timebre_2_variance = variance(timebre2_arr);
-                song.timebre_2_skewness  = sampleSkewness(timebre2_arr);
+                song.timebre_2_skewness = sampleSkewness(timebre2_arr);
                 song.timebre_2_kurtosis = sampleKurtosis(timebre2_arr);
                 song.timebre_2_standard_deviation = standardDeviation(timebre2_arr);
                 song.timebre_2_80th_percentile = quantile(timebre2_arr, 0.8);
@@ -300,7 +303,7 @@ function GetAnalysis(song) {
 
                 song.timebre_3_mean = mean(timebre3_arr);
                 song.timebre_3_variance = variance(timebre3_arr);
-                song.timebre_3_skewness  = sampleSkewness(timebre3_arr);
+                song.timebre_3_skewness = sampleSkewness(timebre3_arr);
                 song.timebre_3_kurtosis = sampleKurtosis(timebre3_arr);
                 song.timebre_3_standard_deviation = standardDeviation(timebre3_arr);
                 song.timebre_3_80th_percentile = quantile(timebre3_arr, 0.8);
@@ -311,7 +314,7 @@ function GetAnalysis(song) {
 
                 song.timebre_4_mean = mean(timebre4_arr);
                 song.timebre_4_variance = variance(timebre4_arr);
-                song.timebre_4_skewness  = sampleSkewness(timebre4_arr);
+                song.timebre_4_skewness = sampleSkewness(timebre4_arr);
                 song.timebre_4_kurtosis = sampleKurtosis(timebre4_arr);
                 song.timebre_4_standard_deviation = standardDeviation(timebre4_arr);
                 song.timebre_4_80th_percentile = quantile(timebre4_arr, 0.8);
@@ -322,7 +325,7 @@ function GetAnalysis(song) {
 
                 song.timebre_5_mean = mean(timebre5_arr);
                 song.timebre_5_variance = variance(timebre5_arr);
-                song.timebre_5_skewness  = sampleSkewness(timebre5_arr);
+                song.timebre_5_skewness = sampleSkewness(timebre5_arr);
                 song.timebre_5_kurtosis = sampleKurtosis(timebre5_arr);
                 song.timebre_5_standard_deviation = standardDeviation(timebre5_arr);
                 song.timebre_5_80th_percentile = quantile(timebre5_arr, 0.8);
@@ -333,7 +336,7 @@ function GetAnalysis(song) {
 
                 song.timebre_6_mean = mean(timebre6_arr);
                 song.timebre_6_variance = variance(timebre6_arr);
-                song.timebre_6_skewness  = sampleSkewness(timebre6_arr);
+                song.timebre_6_skewness = sampleSkewness(timebre6_arr);
                 song.timebre_6_kurtosis = sampleKurtosis(timebre6_arr);
                 song.timebre_6_standard_deviation = standardDeviation(timebre6_arr);
                 song.timebre_6_80th_percentile = quantile(timebre6_arr, 0.8);
@@ -344,7 +347,7 @@ function GetAnalysis(song) {
 
                 song.timebre_7_mean = mean(timebre7_arr);
                 song.timebre_7_variance = variance(timebre7_arr);
-                song.timebre_7_skewness  = sampleSkewness(timebre7_arr);
+                song.timebre_7_skewness = sampleSkewness(timebre7_arr);
                 song.timebre_7_kurtosis = sampleKurtosis(timebre7_arr);
                 song.timebre_7_standard_deviation = standardDeviation(timebre7_arr);
                 song.timebre_7_80th_percentile = quantile(timebre7_arr, 0.8);
@@ -355,7 +358,7 @@ function GetAnalysis(song) {
 
                 song.timebre_8_mean = mean(timebre8_arr);
                 song.timebre_8_variance = variance(timebre8_arr);
-                song.timebre_8_skewness  = sampleSkewness(timebre8_arr);
+                song.timebre_8_skewness = sampleSkewness(timebre8_arr);
                 song.timebre_8_kurtosis = sampleKurtosis(timebre8_arr);
                 song.timebre_8_standard_deviation = standardDeviation(timebre8_arr);
                 song.timebre_8_80th_percentile = quantile(timebre8_arr, 0.8);
@@ -366,7 +369,7 @@ function GetAnalysis(song) {
 
                 song.timebre_9_mean = mean(timebre9_arr);
                 song.timebre_9_variance = variance(timebre9_arr);
-                song.timebre_9_skewness  = sampleSkewness(timebre9_arr);
+                song.timebre_9_skewness = sampleSkewness(timebre9_arr);
                 song.timebre_9_kurtosis = sampleKurtosis(timebre9_arr);
                 song.timebre_9_standard_deviation = standardDeviation(timebre9_arr);
                 song.timebre_9_80th_percentile = quantile(timebre9_arr, 0.8);
@@ -377,7 +380,7 @@ function GetAnalysis(song) {
 
                 song.timebre_10_mean = mean(timebre10_arr);
                 song.timebre_10_variance = variance(timebre10_arr);
-                song.timebre_10_skewness  = sampleSkewness(timebre10_arr);
+                song.timebre_10_skewness = sampleSkewness(timebre10_arr);
                 song.timebre_10_kurtosis = sampleKurtosis(timebre10_arr);
                 song.timebre_10_standard_deviation = standardDeviation(timebre10_arr);
                 song.timebre_10_80th_percentile = quantile(timebre10_arr, 0.8);
@@ -388,7 +391,7 @@ function GetAnalysis(song) {
 
                 song.timebre_11_mean = mean(timebre11_arr);
                 song.timebre_11_variance = variance(timebre11_arr);
-                song.timebre_11_skewness  = sampleSkewness(timebre11_arr);
+                song.timebre_11_skewness = sampleSkewness(timebre11_arr);
                 song.timebre_11_kurtosis = sampleKurtosis(timebre11_arr);
                 song.timebre_11_standard_deviation = standardDeviation(timebre11_arr);
                 song.timebre_11_80th_percentile = quantile(timebre11_arr, 0.8);
@@ -399,7 +402,7 @@ function GetAnalysis(song) {
 
                 song.timebre_12_mean = mean(timebre12_arr);
                 song.timebre_12_variance = variance(timebre12_arr);
-                song.timebre_12_skewness  = sampleSkewness(timebre12_arr);
+                song.timebre_12_skewness = sampleSkewness(timebre12_arr);
                 song.timebre_12_kurtosis = sampleKurtosis(timebre12_arr);
                 song.timebre_12_standard_deviation = standardDeviation(timebre12_arr);
                 song.timebre_12_80th_percentile = quantile(timebre12_arr, 0.8);
@@ -408,9 +411,9 @@ function GetAnalysis(song) {
                 song.timebre_12_range = song.timebre_12_max - song.timebre_12_min;
                 song.timebre_12_median = median(timebre12_arr);
 
-                // console.log(song);
                 songs.push(song);
-                console.log(songs)
+                // dataResult.push(song);
+                // console.log(songs)
 
 
             } else {
@@ -426,27 +429,84 @@ function GetAnalysis(song) {
 
 
 var data = [];
+var dataResult = [];
 
 function handleFileSelect(evt) {
     var file = evt.target.files[0];
+
     Papa.parse(file, {
         header: true,
         dynamicTyping: true,
         complete: function (results) {
             data = results.data;
-
-
-            data.forEach(function(song) {
-                if(song.date){
+            data.forEach(function (song) {
+                if (song.date) {
                     GetId(song);
 
-                }
 
+
+                }
+            });
+            Promise.all(promises).then(function(values) {
+                var result = CSV(songs);
+                console.log("2222222222");
+                console.log("songs"+songs);
+                console.log("result"+result);
+                exportFile(result, "data.csv");
             });
 
-            // console.log(songs)
+
         }
     });
+}
+
+function CSV(songs) {
+    var empConnects = [];
+    songs.forEach(function (song) {
+        empConnects.push([
+            "\"" + song.title + "\"",
+            "\"" + song.artist + "\"",
+            "\"" + song.id + "\""
+        ]);
+    });
+    if (empConnects.length < 1) {
+        console.log("no data");
+        return;
+    }
+    var csvContent = "data:text/csv;charset=utf-8,%EF%BB%BF";
+    csvContent = "";
+    empConnects.forEach(function (infoArray, index) {
+        dataString = infoArray.join(",");
+        csvContent += index < empConnects.length ? dataString : dataString;
+        csvContent += "\n";
+    });
+
+    return csvContent;
+
+}
+
+function exportFile(data, filename) {
+
+    if (!data) {
+        console.error('Console.save: No data');
+        return;
+    }
+
+    if (!filename) filename = 'console.json';
+
+    if (typeof data === "object") {
+        data = JSON.stringify(data, undefined, 4)
+    }
+
+    var blob = new Blob([data], {type: 'text/json'}),
+        e = document.createEvent('MouseEvents'),
+        a = document.createElement('a');
+
+    a.download = filename;
+    a.href = window.URL.createObjectURL(blob);
+    a.dataset.downloadurl = ['text/json', a.download, a.href].join(':');
+    e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    a.dispatchEvent(e)
 }
 
 $(document).ready(function () {
