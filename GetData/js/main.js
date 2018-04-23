@@ -1,4 +1,5 @@
 function Song(title, artist, peak_position) {
+    this.date = date;
     this.title = title;
     this.artist = artist;
     this.peak_position = peak_position;
@@ -160,24 +161,23 @@ function Song(title, artist, peak_position) {
 var songs = [];
 var promises = [];
 // Call API:https://api.spotify.com/v1/search?q=track%3ALac%20troi%20artist%3ASon%20Tung%20MTP&type=track
-let token = "BQDvjNSh-1tkZ9po3di4szyDn4P-74lJ-oXwf0_KzaFBB4DydPk0k7DW73vWAlq4ldnUcCilz2PgwnwjJEM0QKpYEcXKlzx1MG5pIiWSf4AkfSTm129wiUfuJuJcQChl7hi8h9y27mIn3WoBTXjX-IbLvrpushBrnJkvNYF3g9dhqgo3FTPsGZEr989Uw9LG2nVD-ABisgks";
+let token = "BQAGSE-9XKegJd6Dbr5rneAUkw72qxcykbVC4jbsO2MJtG6KA9YmEh0mv9YDuBbb_1VarEjkeG04iibB3xAytqjSQTlL--UQnV8ANA7jhv5XYHgtTWUfhr-rsQ25aqbiPcoFFLenj4Xi1ein4r2yLDcM4AowhHVTNErF727JirV0ocXus2EVEsbIh14AvN2st2SKEvoC_DyvllSw7zzPzKOEYdhjgQ_OFYbRjc-MIRMlwzc_O8eyckrbTUmX7OigN2aNsqRsM5jtKcXjIPZBZhXjTEY";
 let Authorization = "Bearer " + token;
 
 // send Get ID
 function GetId(song) {
-    var promise1 = new Promise(resolve => {
+    // return new Promise(resolve => {
         var linkRequest = "https://api.spotify.com/v1/search?q=track:" + song.title + " artist:" + song.artist + "&type=track";
         var xhttp = new XMLHttpRequest();
         function reqListener() {
-            resolve(JSON.parse(this.responseText));
+            // resolve(JSON.parse(this.responseText));
             if (this.readyState === 4 && this.status === 200) {
                 var parsedData = JSON.parse(this.responseText);
                 if (parsedData.tracks.items.length > 0) {
+                    console.log(n++);
                     song.id = parsedData.tracks.items[0].id;
-                    console.log("111111111111111");
                     GetFeatures(song);
                     GetAnalysis(song);
-                    // songs.push(song);
                 }
 
             } else {
@@ -185,21 +185,20 @@ function GetId(song) {
             }
         }
         xhttp.addEventListener("load", reqListener);
-        xhttp.open("GET", linkRequest, true);
+        xhttp.open("GET", linkRequest, false);
         xhttp.setRequestHeader("Authorization", Authorization);
         xhttp.send();
-    });
-    promises.push(promise1);
+    // });
+
 }
 
 // Call API: https://api.spotify.com/v1/audio-features/{id}
 // Get Audio Features for a Track
 function GetFeatures(song) {
-    var promise2 = new Promise(resolve => {
+    // return new Promise(resolve => {
         var linkRequest = "https://api.spotify.com/v1/audio-features/" + song.id;
         var xhttp = new XMLHttpRequest();
         function reqListener() {
-            resolve(JSON.parse(this.responseText));
             if (this.readyState === 4 && this.status === 200) {
                 var parsedData = JSON.parse(this.responseText);
                 song.duration_ms = parsedData.duration_ms;
@@ -216,21 +215,18 @@ function GetFeatures(song) {
             }
         }
         xhttp.addEventListener("load", reqListener);
-        xhttp.open("GET", linkRequest, true);
+        xhttp.open("GET", linkRequest, false);
         xhttp.setRequestHeader("Authorization", Authorization);
         xhttp.send();
-    });
-    promises.push(promise2);
 }
 
 // Call API: https://api.spotify.com/v1/audio-analysis/{id}
 // Get Audio Analysis for a Track
 function GetAnalysis(song) {
-    var promise3 =  new Promise(resolve => {
+    // return new Promise(resolve => {
         var linkRequest = "https://api.spotify.com/v1/audio-analysis/" + song.id;
-        var xhttp = new XMLHttpRequest();
+        var xhttp = new XMLHttpRequest({async:false});
         function reqListener() {
-            resolve(JSON.parse(this.responseText));
             if (this.readyState === 4 && this.status === 200) {
                 var parsedData = JSON.parse(this.responseText);
 
@@ -410,27 +406,21 @@ function GetAnalysis(song) {
                 song.timebre_12_max = max(timebre12_arr);
                 song.timebre_12_range = song.timebre_12_max - song.timebre_12_min;
                 song.timebre_12_median = median(timebre12_arr);
-
-                songs.push(song);
-                // dataResult.push(song);
-                // console.log(songs)
-
-
             } else {
 
             }
         }
         xhttp.addEventListener("load", reqListener);
-        xhttp.open("GET", linkRequest, true);
+        xhttp.open("GET", linkRequest, false);
         xhttp.setRequestHeader("Authorization", Authorization);
         xhttp.send();
-    });
+        songs.push(song);
 }
 
 
 var data = [];
 var dataResult = [];
-
+var n = 1;
 function handleFileSelect(evt) {
     var file = evt.target.files[0];
 
@@ -441,19 +431,17 @@ function handleFileSelect(evt) {
             data = results.data;
             data.forEach(function (song) {
                 if (song.date) {
-                    GetId(song);
 
+                    GetId(song);
 
 
                 }
             });
-            Promise.all(promises).then(function(values) {
-                var result = CSV(songs);
-                console.log("2222222222");
-                console.log("songs"+songs);
-                console.log("result"+result);
-                exportFile(result, "data.csv");
-            });
+            var result = CSV(songs);
+            exportFile(result, "data.csv");
+            console.log("----------DONE------------");
+
+
 
 
         }
@@ -464,9 +452,149 @@ function CSV(songs) {
     var empConnects = [];
     songs.forEach(function (song) {
         empConnects.push([
+            "\"" + song.date + "\"",
             "\"" + song.title + "\"",
             "\"" + song.artist + "\"",
-            "\"" + song.id + "\""
+            "\"" + song.peak_position + "\"",
+            "\"" + song.id + "\"",
+            "\"" + song.duration_ms + "\"",
+            "\"" + song.tempo + "\"",
+            "\"" + song.time_signature + "\"",
+            "\"" + song.mode + "\"",
+            "\"" + song.key + "\"",
+            "\"" + song.loudness + "\"",
+            "\"" + song.danceability + "\"",
+            "\"" + song.energy + "\"",
+            "\"" + song.beatdiff_mean + "\"",
+            "\"" + song.beatdiff_variance + "\"",
+            "\"" + song.beatdiff_skewness + "\"",
+            "\"" + song.beatdiff_kurtosis + "\"",
+            "\"" + song.beatdiff_standard_deviation + "\"",
+            "\"" + song.beatdiff_80th_percentile + "\"",
+            "\"" + song.beatdiff_min + "\"",
+            "\"" + song.beatdiff_max + "\"",
+            "\"" + song.beatdiff_range + "\"",
+            "\"" + song.beatdiff_median + "\"",
+            "\"" + song.timebre_1_mean + "\"",
+            "\"" + song.timebre_1_variance + "\"",
+            "\"" + song.timebre_1_skewness + "\"",
+            "\"" + song.timebre_1_kurtosis + "\"",
+            "\"" + song.timebre_1_standard_deviation + "\"",
+            "\"" + song.timebre_1_80th_percentile + "\"",
+            "\"" + song.timebre_1_min + "\"",
+            "\"" + song.timebre_1_max + "\"",
+            "\"" + song.timebre_1_range + "\"",
+            "\"" + song.timebre_1_median + "\"",
+            "\"" + song.timebre_2_mean + "\"",
+            "\"" + song.timebre_2_variance + "\"",
+            "\"" + song.timebre_2_skewness + "\"",
+            "\"" + song.timebre_2_kurtosis + "\"",
+            "\"" + song.timebre_2_standard_deviation + "\"",
+            "\"" + song.timebre_2_80th_percentile + "\"",
+            "\"" + song.timebre_2_min + "\"",
+            "\"" + song.timebre_2_max + "\"",
+            "\"" + song.timebre_2_range + "\"",
+            "\"" + song.timebre_2_median + "\"",
+            "\"" + song.timebre_3_mean + "\"",
+            "\"" + song.timebre_3_variance + "\"",
+            "\"" + song.timebre_3_skewness + "\"",
+            "\"" + song.timebre_3_kurtosis + "\"",
+            "\"" + song.timebre_3_standard_deviation + "\"",
+            "\"" + song.timebre_3_80th_percentile + "\"",
+            "\"" + song.timebre_3_min + "\"",
+            "\"" + song.timebre_3_max + "\"",
+            "\"" + song.timebre_3_range + "\"",
+            "\"" + song.timebre_3_median + "\"",
+            "\"" + song.timebre_4_mean + "\"",
+            "\"" + song.timebre_4_variance + "\"",
+            "\"" + song.timebre_4_skewness + "\"",
+            "\"" + song.timebre_4_kurtosis + "\"",
+            "\"" + song.timebre_4_standard_deviation + "\"",
+            "\"" + song.timebre_4_80th_percentile + "\"",
+            "\"" + song.timebre_4_min + "\"",
+            "\"" + song.timebre_4_max + "\"",
+            "\"" + song.timebre_4_range + "\"",
+            "\"" + song.timebre_4_median + "\"",
+            "\"" + song.timebre_5_mean + "\"",
+            "\"" + song.timebre_5_variance + "\"",
+            "\"" + song.timebre_5_skewness + "\"",
+            "\"" + song.timebre_5_kurtosis + "\"",
+            "\"" + song.timebre_5_standard_deviation + "\"",
+            "\"" + song.timebre_5_80th_percentile + "\"",
+            "\"" + song.timebre_5_min + "\"",
+            "\"" + song.timebre_5_max + "\"",
+            "\"" + song.timebre_5_range + "\"",
+            "\"" + song.timebre_5_median + "\"",
+            "\"" + song.timebre_6_mean + "\"",
+            "\"" + song.timebre_6_variance + "\"",
+            "\"" + song.timebre_6_skewness + "\"",
+            "\"" + song.timebre_6_kurtosis + "\"",
+            "\"" + song.timebre_6_standard_deviation + "\"",
+            "\"" + song.timebre_6_80th_percentile + "\"",
+            "\"" + song.timebre_6_min + "\"",
+            "\"" + song.timebre_6_max + "\"",
+            "\"" + song.timebre_6_range + "\"",
+            "\"" + song.timebre_6_median + "\"",
+            "\"" + song.timebre_7_mean + "\"",
+            "\"" + song.timebre_7_variance + "\"",
+            "\"" + song.timebre_7_skewness + "\"",
+            "\"" + song.timebre_7_kurtosis + "\"",
+            "\"" + song.timebre_7_standard_deviation + "\"",
+            "\"" + song.timebre_7_80th_percentile + "\"",
+            "\"" + song.timebre_7_min + "\"",
+            "\"" + song.timebre_7_max + "\"",
+            "\"" + song.timebre_7_range + "\"",
+            "\"" + song.timebre_7_median + "\"",
+            "\"" + song.timebre_8_mean + "\"",
+            "\"" + song.timebre_8_variance + "\"",
+            "\"" + song.timebre_8_skewness + "\"",
+            "\"" + song.timebre_8_kurtosis + "\"",
+            "\"" + song.timebre_8_standard_deviation + "\"",
+            "\"" + song.timebre_8_80th_percentile + "\"",
+            "\"" + song.timebre_8_min + "\"",
+            "\"" + song.timebre_8_max + "\"",
+            "\"" + song.timebre_8_range + "\"",
+            "\"" + song.timebre_8_median + "\"",
+            "\"" + song.timebre_9_mean + "\"",
+            "\"" + song.timebre_9_variance + "\"",
+            "\"" + song.timebre_9_skewness + "\"",
+            "\"" + song.timebre_9_kurtosis + "\"",
+            "\"" + song.timebre_9_standard_deviation + "\"",
+            "\"" + song.timebre_9_80th_percentile + "\"",
+            "\"" + song.timebre_9_min + "\"",
+            "\"" + song.timebre_9_max + "\"",
+            "\"" + song.timebre_9_range + "\"",
+            "\"" + song.timebre_9_median + "\"",
+            "\"" + song.timebre_10_mean + "\"",
+            "\"" + song.timebre_10_variance + "\"",
+            "\"" + song.timebre_10_skewness + "\"",
+            "\"" + song.timebre_10_kurtosis + "\"",
+            "\"" + song.timebre_10_standard_deviation + "\"",
+            "\"" + song.timebre_10_80th_percentile + "\"",
+            "\"" + song.timebre_10_min + "\"",
+            "\"" + song.timebre_10_max + "\"",
+            "\"" + song.timebre_10_range + "\"",
+            "\"" + song.timebre_10_median + "\"",
+            "\"" + song.timebre_11_mean + "\"",
+            "\"" + song.timebre_11_variance + "\"",
+            "\"" + song.timebre_11_skewness + "\"",
+            "\"" + song.timebre_11_kurtosis + "\"",
+            "\"" + song.timebre_11_standard_deviation + "\"",
+            "\"" + song.timebre_11_80th_percentile + "\"",
+            "\"" + song.timebre_11_min + "\"",
+            "\"" + song.timebre_11_max + "\"",
+            "\"" + song.timebre_11_range + "\"",
+            "\"" + song.timebre_11_median + "\"",
+            "\"" + song.timebre_12_mean + "\"",
+            "\"" + song.timebre_12_variance + "\"",
+            "\"" + song.timebre_12_skewness + "\"",
+            "\"" + song.timebre_12_kurtosis + "\"",
+            "\"" + song.timebre_12_standard_deviation + "\"",
+            "\"" + song.timebre_12_80th_percentile + "\"",
+            "\"" + song.timebre_12_min + "\"",
+            "\"" + song.timebre_12_max + "\"",
+            "\"" + song.timebre_12_range + "\"",
+            "\"" + song.timebre_12_median + "\""
         ]);
     });
     if (empConnects.length < 1) {
