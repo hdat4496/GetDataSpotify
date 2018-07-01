@@ -161,7 +161,7 @@ function Song(title, artist, peak_position) {
 var songs = [];
 var promises = [];
 // Call API:https://api.spotify.com/v1/search?q=track%3ALac%20troi%20artist%3ASon%20Tung%20MTP&type=track
-let token = "BQAGSE-9XKegJd6Dbr5rneAUkw72qxcykbVC4jbsO2MJtG6KA9YmEh0mv9YDuBbb_1VarEjkeG04iibB3xAytqjSQTlL--UQnV8ANA7jhv5XYHgtTWUfhr-rsQ25aqbiPcoFFLenj4Xi1ein4r2yLDcM4AowhHVTNErF727JirV0ocXus2EVEsbIh14AvN2st2SKEvoC_DyvllSw7zzPzKOEYdhjgQ_OFYbRjc-MIRMlwzc_O8eyckrbTUmX7OigN2aNsqRsM5jtKcXjIPZBZhXjTEY";
+let token = "BQB2EREMili5adeUdnfFO2wrK2Ki4jYeHS45lLWFJsOp6g7G18uCKdh6izoSf89_h_yXrF4HiR6BI1vJ-hqvsVpe-gEKU2q7AycvEp5yl0-na7M7hA1Sz7hxJ4x7mQgV0im4cs5IlGxSEp4pZfR6rjGy7wnd9ec";
 let Authorization = "Bearer " + token;
 
 // send Get ID
@@ -178,6 +178,7 @@ function GetId(song) {
                     song.id = parsedData.tracks.items[0].id;
                     GetFeatures(song);
                     GetAnalysis(song);
+                    GetArtistPopularity(song);
                 }
 
             } else {
@@ -190,6 +191,56 @@ function GetId(song) {
         xhttp.send();
     // });
 
+}
+
+
+// Get a Track by Call API: https://api.spotify.com/v1/tracks/{id}
+// Get popularity
+function GetArtistPopularity(song) {
+    // return new Promise(resolve => {
+    var linkRequest = "https://api.spotify.com/v1/tracks/" + song.id;
+    var xhttp = new XMLHttpRequest();
+    function reqListener() {
+        if (this.readyState === 4 && this.status === 200) {
+            var parsedData = JSON.parse(this.responseText);
+
+            var artist_popularity =0;
+            parsedData.artists.forEach(function (artist) {
+                GetArtist(artist);
+                var popularity = artist.popularity;
+                if(popularity > artist_popularity){
+                    artist_popularity = popularity;
+                }
+            });
+            song.artist_popularity = artist_popularity;
+        } else {
+
+        }
+    }
+    xhttp.addEventListener("load", reqListener);
+    xhttp.open("GET", linkRequest, false);
+    xhttp.setRequestHeader("Authorization", Authorization);
+    xhttp.send();
+}
+
+// Call API: https://api.spotify.com/v1/artists/{id}
+// Get artists for a Track
+function GetArtist(artist) {
+    // return new Promise(resolve => {
+    var linkRequest = "https://api.spotify.com/v1/artists/" + artist.id;
+    var xhttp = new XMLHttpRequest();
+    function reqListener() {
+        if (this.readyState === 4 && this.status === 200) {
+            var parsedData = JSON.parse(this.responseText);
+            artist.popularity = parsedData.popularity;
+        } else {
+
+        }
+    }
+    xhttp.addEventListener("load", reqListener);
+    xhttp.open("GET", linkRequest, false);
+    xhttp.setRequestHeader("Authorization", Authorization);
+    xhttp.send();
 }
 
 // Call API: https://api.spotify.com/v1/audio-features/{id}
@@ -209,6 +260,12 @@ function GetFeatures(song) {
                 song.loudness = parsedData.loudness;
                 song.danceability = parsedData.danceability;
                 song.energy = parsedData.energy;
+                song.speechiness = parsedData.speechiness;
+                song.acousticness = parsedData.acousticness;
+                song.instrumentalness = parsedData.instrumentalness;
+                song.liveness = parsedData.liveness;
+                song.valence = parsedData.valence;
+
 
             } else {
 
@@ -457,6 +514,12 @@ function CSV(songs) {
             "\"" + song.artist + "\"",
             "\"" + song.peak_position + "\"",
             "\"" + song.id + "\"",
+            "\"" + song.artist_popularity + "\"",
+            "\"" + song.speechiness + "\"",
+            "\"" + song.acousticness + "\"",
+            "\"" + song.instrumentalness + "\"",
+            "\"" + song.liveness + "\"",
+            "\"" + song.valence + "\"",
             "\"" + song.duration_ms + "\"",
             "\"" + song.tempo + "\"",
             "\"" + song.time_signature + "\"",
