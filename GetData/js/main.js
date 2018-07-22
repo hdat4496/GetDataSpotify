@@ -161,7 +161,7 @@ function Song(title, artist, peak_position) {
 var songs = [];
 var promises = [];
 // Call API:https://api.spotify.com/v1/search?q=track%3ALac%20troi%20artist%3ASon%20Tung%20MTP&type=track
-let token = "BQB2EREMili5adeUdnfFO2wrK2Ki4jYeHS45lLWFJsOp6g7G18uCKdh6izoSf89_h_yXrF4HiR6BI1vJ-hqvsVpe-gEKU2q7AycvEp5yl0-na7M7hA1Sz7hxJ4x7mQgV0im4cs5IlGxSEp4pZfR6rjGy7wnd9ec";
+let token = "BQCmNcV8Cfw6t171Tth8kEi9tmeolWvm07mAmicVzWh7jYf1QXOgD3QNwtAXqwNDEbjstbUUk0I5ju_4QzqVqcpAGM8LQoJvGXCY4xAdQ8BJ_2uzVVtz4Skg1Vdh4HLqa2RR-ZDOqQdvtGTfOwfuaht--dmfXv6rVhLci1JCRjgt5k1moKuFxzWaVlUwJQ5gi6sDto7Xm1PYyYc__llB32u3YczloQL1sK1JdQcaRwU50p6KoWyLsvSpGH58G4YbuYzTCgtY3HSM-WzJP2xlJ8Ry3bSQQ91x";
 let Authorization = "Bearer " + token;
 
 // send Get ID
@@ -174,7 +174,6 @@ function GetId(song) {
             if (this.readyState === 4 && this.status === 200) {
                 var parsedData = JSON.parse(this.responseText);
                 if (parsedData.tracks.items.length > 0) {
-                    console.log(n++);
                     song.id = parsedData.tracks.items[0].id;
                     GetFeatures(song);
                     GetAnalysis(song);
@@ -279,14 +278,30 @@ function GetFeatures(song) {
 
 // Call API: https://api.spotify.com/v1/audio-analysis/{id}
 // Get Audio Analysis for a Track
+var n = 0;
 function GetAnalysis(song) {
     // return new Promise(resolve => {
         var linkRequest = "https://api.spotify.com/v1/audio-analysis/" + song.id;
         var xhttp = new XMLHttpRequest({async:false});
+        var no_push = false;
         function reqListener() {
+
+            if (n<5){
+                if (this.status === 504) {
+                    n++;
+                    no_push = true;
+                    GetAnalysis(song);
+
+
+                }
+            }
+            else {
+                n=0;
+            }
+
+
             if (this.readyState === 4 && this.status === 200) {
                 var parsedData = JSON.parse(this.responseText);
-
                 var duration_arr = [];
                 var timebre1_arr = [];
                 var timebre2_arr = [];
@@ -307,18 +322,21 @@ function GetAnalysis(song) {
                 });
 
                 parsedData.segments.forEach(function (segment) {
-                    timebre1_arr.push(segment.timbre[0]);
-                    timebre2_arr.push(segment.timbre[1]);
-                    timebre3_arr.push(segment.timbre[2]);
-                    timebre4_arr.push(segment.timbre[3]);
-                    timebre5_arr.push(segment.timbre[4]);
-                    timebre6_arr.push(segment.timbre[5]);
-                    timebre7_arr.push(segment.timbre[6]);
-                    timebre8_arr.push(segment.timbre[7]);
-                    timebre9_arr.push(segment.timbre[8]);
-                    timebre10_arr.push(segment.timbre[9]);
-                    timebre11_arr.push(segment.timbre[10]);
-                    timebre12_arr.push(segment.timbre[11]);
+                    if (segment.confidence >= 0.5){
+                        timebre1_arr.push(segment.timbre[0]);
+                        timebre2_arr.push(segment.timbre[1]);
+                        timebre3_arr.push(segment.timbre[2]);
+                        timebre4_arr.push(segment.timbre[3]);
+                        timebre5_arr.push(segment.timbre[4]);
+                        timebre6_arr.push(segment.timbre[5]);
+                        timebre7_arr.push(segment.timbre[6]);
+                        timebre8_arr.push(segment.timbre[7]);
+                        timebre9_arr.push(segment.timbre[8]);
+                        timebre10_arr.push(segment.timbre[9]);
+                        timebre11_arr.push(segment.timbre[10]);
+                        timebre12_arr.push(segment.timbre[11]);
+                    }
+
                 });
 
                 song.beatdiff_mean = mean(duration_arr);
@@ -471,7 +489,10 @@ function GetAnalysis(song) {
         xhttp.open("GET", linkRequest, false);
         xhttp.setRequestHeader("Authorization", Authorization);
         xhttp.send();
-        songs.push(song);
+        if (!no_push){
+            songs.push(song);
+        }
+
 }
 
 
