@@ -161,7 +161,7 @@ function Song(title, artist, peak_position) {
 var songs = [];
 var promises = [];
 // Call API:https://api.spotify.com/v1/search?q=track%3ALac%20troi%20artist%3ASon%20Tung%20MTP&type=track
-let token = "BQCmNcV8Cfw6t171Tth8kEi9tmeolWvm07mAmicVzWh7jYf1QXOgD3QNwtAXqwNDEbjstbUUk0I5ju_4QzqVqcpAGM8LQoJvGXCY4xAdQ8BJ_2uzVVtz4Skg1Vdh4HLqa2RR-ZDOqQdvtGTfOwfuaht--dmfXv6rVhLci1JCRjgt5k1moKuFxzWaVlUwJQ5gi6sDto7Xm1PYyYc__llB32u3YczloQL1sK1JdQcaRwU50p6KoWyLsvSpGH58G4YbuYzTCgtY3HSM-WzJP2xlJ8Ry3bSQQ91x";
+let token = "BQD5Sxq5Ci1Jl4s97mmNHzLeCfICEr6ORsbI19neR2gnVxW4WTmKCk4aOpHF7oJ6fYdtfD3fgsKx0Ir-R4pzMEM7av8VF2g7ZuYsQronjm47Ar4tM6aToBgPBH7KLWoaSSumZNynveUBCTgmlgvzlEPJXy8kdOYS12yI9KDTlROr9qnHOnNkJVTW7RdLwkqXJ7xbqaI2jIU-cwljE_qPABCvOMK2v-J0pkKkVIboQ5o_lffydvfv2uvXzTvpCwArZVD2QPY9kNnt5SJpLW9DGSmE6HPD2diV";
 let Authorization = "Bearer " + token;
 
 // send Get ID
@@ -174,6 +174,7 @@ function GetId(song) {
             if (this.readyState === 4 && this.status === 200) {
                 var parsedData = JSON.parse(this.responseText);
                 if (parsedData.tracks.items.length > 0) {
+                    console.log(n++);
                     song.id = parsedData.tracks.items[0].id;
                     GetFeatures(song);
                     GetAnalysis(song);
@@ -278,7 +279,7 @@ function GetFeatures(song) {
 
 // Call API: https://api.spotify.com/v1/audio-analysis/{id}
 // Get Audio Analysis for a Track
-var n = 0;
+var m = 0;
 function GetAnalysis(song) {
     // return new Promise(resolve => {
         var linkRequest = "https://api.spotify.com/v1/audio-analysis/" + song.id;
@@ -286,17 +287,15 @@ function GetAnalysis(song) {
         var no_push = false;
         function reqListener() {
 
-            if (n<5){
+            if (m<5){
                 if (this.status === 504) {
-                    n++;
+                    m++;
                     no_push = true;
                     GetAnalysis(song);
-
-
                 }
             }
             else {
-                n=0;
+                m=0;
             }
 
 
